@@ -1,14 +1,29 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { CreateStringDto } from './dto/create-string.dto';
 import { hash256 } from 'src/utils/utils';
+import { StringFilter } from 'src/utils/definitions';
 
-let database: any = [];
+let database: CreateStringDto[] = [];
 
 @Injectable()
 export class StringsService {
   create(createStringDto: CreateStringDto) {
     if (!createStringDto.value) {
       throw new BadRequestException('String value is required');
+    }
+
+    if (typeof createStringDto.value !== 'string') {
+      throw new UnprocessableEntityException('String value must be a string');
+    }
+
+    if (database.find((item) => item.value === createStringDto.value)) {
+      throw new ConflictException('String value must be unique');
     }
 
     const sha256_hash = hash256(createStringDto.value);
@@ -52,8 +67,67 @@ export class StringsService {
     return database;
   }
 
+  findFiltered(filter: StringFilter) {
+    let matched: CreateStringDto[] = [];
+
+    if (filter.contains_character) {
+      matched = [
+        ...matched,
+        ...database.filter((item) =>
+          item.value.includes(filter.contains_character),
+        ),
+      ];
+    }
+
+    if (filter.is_palindrome) {
+      matched = [
+        ...matched,
+        ...database.filter(
+          (item: CreateStringDto) => item.properties.is_palindrome === true,
+        ),
+      ];
+    }
+
+    if (filter.min_length) {
+      matched = [
+        ...matched,
+        ...database.filter(
+          (item) => item.properties.length >= filter.min_length,
+        ),
+      ];
+    }
+
+    if (filter.max_length) {
+      matched = [
+        ...matched,
+        ...database.filter(
+          (item) => item.properties.length <= filter.max_length,
+        ),
+      ];
+    }
+
+    if (filter.word_count) {
+      matched = [
+        ...matched,
+        ...database.filter(
+          (item) => item.properties.word_count === filter.word_count,
+        ),
+      ];
+    }
+
+    return {
+      data: matched,
+      count: matched.length,
+      filters_applied: filter,
+    };
+  }
+
   findOne(stringValue: string) {
-    return database.find((item) => item.value === stringValue);
+    const dbString = database.find((item) => item.value === stringValue);
+    if (!dbString) {
+      throw new NotFoundException('String not found');
+    }
+    return dbString;
   }
 
   remove(stringValue: string) {
