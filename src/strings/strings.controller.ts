@@ -1,7 +1,16 @@
-import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { StringsService } from './strings.service';
 import { CreateStringDto } from './dto/create-string.dto';
 import { StringFilter } from 'src/utils/definitions';
+import { parseNlQ } from 'src/utils/utils';
 
 @Controller('strings')
 export class StringsController {
@@ -9,7 +18,6 @@ export class StringsController {
 
   @Post()
   create(@Body() createStringDto: CreateStringDto) {
-    console.log('hi:', createStringDto);
     return this.stringsService.create(createStringDto);
   }
 
@@ -31,11 +39,18 @@ export class StringsController {
   }
   @Get('/filter-by-natural-language')
   filterByNaturalLanguage(@Query('query') query: string) {
-    console.log(query);
+    const parsedQuery: Partial<StringFilter> = parseNlQ(query);
+
+    return this.stringsService.findFiltered(parsedQuery as StringFilter);
   }
 
   @Get(':value')
   findOne(@Param('value') value: string) {
     return this.stringsService.findOne(value);
+  }
+
+  @Delete(':value')
+  remove(@Param('value') value: string) {
+    return this.stringsService.remove(value);
   }
 }

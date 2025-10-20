@@ -70,7 +70,7 @@ export class StringsService {
   findFiltered(filter: StringFilter) {
     let matched: CreateStringDto[] = [];
 
-    if (filter.contains_character) {
+    if (filter.contains_character?.length > 0) {
       matched = [
         ...matched,
         ...database.filter((item) =>
@@ -79,7 +79,7 @@ export class StringsService {
       ];
     }
 
-    if (filter.is_palindrome) {
+    if (filter.is_palindrome === true) {
       matched = [
         ...matched,
         ...database.filter(
@@ -88,7 +88,7 @@ export class StringsService {
       ];
     }
 
-    if (filter.min_length) {
+    if (filter.min_length !== undefined) {
       matched = [
         ...matched,
         ...database.filter(
@@ -97,7 +97,7 @@ export class StringsService {
       ];
     }
 
-    if (filter.max_length) {
+    if (filter.max_length !== undefined) {
       matched = [
         ...matched,
         ...database.filter(
@@ -106,7 +106,7 @@ export class StringsService {
       ];
     }
 
-    if (filter.word_count) {
+    if (filter.word_count > 0) {
       matched = [
         ...matched,
         ...database.filter(
@@ -115,9 +115,11 @@ export class StringsService {
       ];
     }
 
+    const uniqueMatchedData = Array.from(new Set(matched).values());
+
     return {
-      data: matched,
-      count: matched.length,
+      data: uniqueMatchedData,
+      count: uniqueMatchedData.length,
       filters_applied: filter,
     };
   }
@@ -131,6 +133,11 @@ export class StringsService {
   }
 
   remove(stringValue: string) {
-    return (database = database.filter((item) => item.value !== stringValue));
+    const index = database.findIndex((item) => item.value === stringValue);
+    if (index === -1) {
+      throw new NotFoundException('String not found');
+    }
+    database.splice(index, 1);
+    return { message: 'String deleted successfully' };
   }
 }
