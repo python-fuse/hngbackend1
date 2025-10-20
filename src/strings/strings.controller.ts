@@ -6,6 +6,7 @@ import {
   Query,
   Param,
   Delete,
+  HttpCode,
 } from '@nestjs/common';
 import { StringsService } from './strings.service';
 import { CreateStringDto } from './dto/create-string.dto';
@@ -50,6 +51,7 @@ export class StringsController {
   }
 
   @Delete(':value')
+  @HttpCode(204)
   remove(@Param('value') value: string) {
     return this.stringsService.remove(value);
   }

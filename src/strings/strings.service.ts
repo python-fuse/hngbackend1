@@ -47,7 +47,7 @@ export class StringsService {
 
       is_palindrome:
         createStringDto.value ===
-        createStringDto.value.split('').reverse().join(''),
+        createStringDto.value.toLocaleLowerCase().split('').reverse().join(''),
 
       unique_characters: new Set(
         createStringDto.value.replaceAll(' ', '').split(''),
@@ -56,7 +56,7 @@ export class StringsService {
       word_count:
         createStringDto.value.trim() === ''
           ? 0
-          : createStringDto.value.split(' ').length,
+          : createStringDto.value.replaceAll(' ', '').length,
       sha256_hash: sha256_hash,
     };
 
@@ -69,58 +69,40 @@ export class StringsService {
   }
 
   findFiltered(filter: StringFilter) {
-    let matched: CreateStringDto[] = [];
+    let filtered: CreateStringDto[] = database;
 
     if (filter.contains_character?.length > 0) {
-      matched = [
-        ...matched,
-        ...database.filter((item) =>
-          item.value.includes(filter.contains_character),
-        ),
-      ];
+      filtered = filtered.filter((item) =>
+        item.value.includes(filter.contains_character),
+      );
     }
 
     if (filter.is_palindrome === true) {
-      matched = [
-        ...matched,
-        ...database.filter(
-          (item: CreateStringDto) => item.properties.is_palindrome === true,
-        ),
-      ];
+      filtered = filtered.filter(
+        (item: CreateStringDto) => item.properties.is_palindrome === true,
+      );
     }
 
     if (filter.min_length !== undefined) {
-      matched = [
-        ...matched,
-        ...database.filter(
-          (item) => item.properties.length >= filter.min_length,
-        ),
-      ];
+      filtered = filtered.filter(
+        (item) => item.properties.length >= filter.min_length,
+      );
     }
 
     if (filter.max_length !== undefined) {
-      matched = [
-        ...matched,
-        ...database.filter(
-          (item) => item.properties.length <= filter.max_length,
-        ),
-      ];
+      filtered = filtered.filter(
+        (item) => item.properties.length <= filter.max_length,
+      );
     }
 
     if (filter.word_count > 0) {
-      matched = [
-        ...matched,
-        ...database.filter(
-          (item) => item.properties.word_count === filter.word_count,
-        ),
-      ];
+      filtered = filtered.filter(
+        (item) => item.properties.word_count === filter.word_count,
+      );
     }
-
-    const uniqueMatchedData = Array.from(new Set(matched).values());
-
     return {
-      data: uniqueMatchedData,
-      count: uniqueMatchedData.length,
+      data: filtered,
+      count: filtered.length,
       filters_applied: filter,
     };
   }
