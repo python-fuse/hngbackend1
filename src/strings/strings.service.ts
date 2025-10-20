@@ -60,7 +60,8 @@ export class StringsService {
       sha256_hash: sha256_hash,
     };
 
-    return database.push(createStringDto);
+    database.push(createStringDto);
+    return createStringDto;
   }
 
   findAll() {
